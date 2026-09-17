@@ -1,0 +1,41 @@
+name: Deploy accounting PWA to GitHub Pages
+
+# PagesのSourceをGitHub Actionsに変更した後、Actions画面から手動実行する。
+# 設定準備のpushだけでは公開しない。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+      - name: Verify application
+        run: npm test
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: false
+      - name: Upload dist only
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
